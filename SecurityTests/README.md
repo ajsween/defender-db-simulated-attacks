@@ -111,7 +111,7 @@ cd SecurityTests
 # Available test categories: brute-force, sql-injection, harmful-application, suspicious-queries, enumeration, shell-commands, all
 ```
 
-### 3. `get-sql-mi-fqdn.sh`
+### 3. `create-sensitive-data.sh`
 **Purpose**: Creates realistic fake sensitive data in SQL Managed Instance to test Defender CSPM's data discovery and classification capabilities.
 
 **Features**:
@@ -151,44 +151,30 @@ cd SecurityTests
 - Sensitive data exposure findings
 - Microsoft Purview catalog integration (if enabled)
 
-### 4. `get-sql-mi-fqdn.sh`
-**Purpose**: Helper script to retrieve the SQL Managed Instance FQDN from Azure and provide ready-to-use test commands.
-
-**Features**:
-- Automatically queries Azure for SQL MI details
-- Provides formatted test commands
-- Validates deployment completion
-
-**Usage**:
-```bash
-./get-sql-mi-fqdn.sh
-```
-
 ## Quick Start - Comprehensive Testing
 
 For the most thorough security validation:
 
-### 1. Get SQL MI Details
+### 1. Auto-discover SQL MI and Run All Tests
 ```bash
-./get-sql-mi-fqdn.sh
+# Auto-discover SQL MI from default resource group and run comprehensive tests
+./test-defender-sql-alerts.sh --auto-discover --batch
+
+# Or run interactively with auto-discovery
+./test-defender-sql-alerts.sh --auto-discover --menu
 ```
 
-### 2. Run Comprehensive Tests
+### 2. Create Sensitive Data for CSPM Testing
 ```bash
-# Basic comprehensive test (no authentication required)
-./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN]
+# Auto-discover SQL MI and create sensitive data
+./test-defender-sql-alerts.sh --auto-discover --menu
+# Then select option 1 to configure target, then run sensitive data creation
 
-# Advanced test with authentication (recommended for full coverage)
-./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --username d4sqlsim --password 'D4SqlSim2025!@#ComplexP@ssw0rd'
-```
-
-### 3. Monitor Data Classification
-```bash
-# Create realistic fake sensitive data for CSPM testing
+# Or specify host manually
 ./create-sensitive-data.sh --host [YOUR-SQL-MI-FQDN] --password 'D4SqlSim2025!@#ComplexP@ssw0rd'
 ```
 
-### 4. Validate Detection
+### 3. Validate Detection
 - Azure Portal > SQL MI > Data Discovery & Classification
 - Defender for Cloud > Recommendations > Data & Storage
 - Microsoft Purview catalog (if enabled)
@@ -199,11 +185,8 @@ For comprehensive security validation of both attack detection and data protecti
 
 ### Phase 1: Infrastructure & Attack Detection
 ```bash
-# 1. Get SQL MI connection details
-./get-sql-mi-fqdn.sh
-
-# 2. Test attack detection capabilities
-./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --username d4sqlsim --password 'D4SqlSim2025!@#ComplexP@ssw0rd'
+# Auto-discover and test attack detection capabilities
+./test-defender-sql-alerts.sh --auto-discover --username d4sqlsim --password 'D4SqlSim2025!@#ComplexP@ssw0rd' --batch
 ```
 
 ### Phase 2: Data Protection & Classification

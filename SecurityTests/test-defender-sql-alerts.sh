@@ -102,6 +102,8 @@ COMMAND LINE OPTIONS:
     -v, --verbose              Verbose output
     --batch                    Run all tests in batch mode
     --menu                     Start interactive menu (default if no args)
+    --auto-discover            Auto-discover SQL MI FQDN from Azure (default RG: rg-d4sql-sims)
+    --resource-group RG_NAME   Resource group for auto-discovery (default: rg-d4sql-sims)
     --help                     Show this help message
 
 AVAILABLE TESTS:
@@ -118,6 +120,15 @@ AVAILABLE TESTS:
 EXAMPLES:
     # Interactive mode (default)
     $0
+
+    # Auto-discover SQL MI and run interactive menu
+    $0 --auto-discover --menu
+
+    # Auto-discover and run specific test
+    $0 --auto-discover --test password-brute
+
+    # Auto-discover from custom resource group
+    $0 --auto-discover --resource-group my-rg --test comprehensive-brute
 
     # Command line - specific test
     $0 --host sqlmi-d4sqlsim-abc123.database.windows.net --test password-brute
@@ -166,6 +177,58 @@ check_dependencies() {
 # Function to create directories
 setup_directories() {
     mkdir -p "$LOG_DIR" "$RESULTS_DIR" "$WORDLIST_DIR" "$REPORT_DIR"
+}
+
+# Function to auto-discover SQL Managed Instance FQDN
+auto_discover_sql_mi() {
+    local resource_group="${1:-rg-d4sql-sims}"
+    
+    print_status "Auto-discovering SQL Managed Instance in resource group: $resource_group"
+    
+    # Check if Azure CLI is available
+    if ! command -v az &> /dev/null; then
+        print_error "Azure CLI (az) is not installed. Cannot auto-discover SQL MI."
+        print_status "Install Azure CLI: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
+        return 1
+    fi
+    
+    # Get subscription ID from Azure CLI or environment variable
+    local subscription_id=""
+    if [[ -z "$AZURE_SUBSCRIPTION_ID" ]]; then
+        subscription_id=$(az account show --query id -o tsv 2>/dev/null)
+        if [[ -z "$subscription_id" ]]; then
+            print_error "Could not determine subscription ID. Please set AZURE_SUBSCRIPTION_ID environment variable or ensure you're logged into Azure CLI."
+            return 1
+        fi
+    else
+        subscription_id="$AZURE_SUBSCRIPTION_ID"
+        az account set --subscription "$subscription_id" 2>/dev/null
+    fi
+    
+    # Get the SQL MI name and FQDN
+    local sql_mi_name
+    local sql_mi_fqdn
+    
+    sql_mi_name=$(az sql mi list --resource-group "$resource_group" --query "[0].name" -o tsv 2>/dev/null)
+    sql_mi_fqdn=$(az sql mi list --resource-group "$resource_group" --query "[0].fullyQualifiedDomainName" -o tsv 2>/dev/null)
+    
+    if [[ -z "$sql_mi_fqdn" ]]; then
+        print_error "Could not retrieve SQL MI FQDN from resource group: $resource_group"
+        print_status "Subscription: $subscription_id"
+        print_status "Make sure the deployment is complete and the resource group exists."
+        return 1
+    fi
+    
+    print_success "SQL Managed Instance discovered:"
+    print_status "Name: $sql_mi_name"
+    print_status "FQDN: $sql_mi_fqdn"
+    print_status "Resource Group: $resource_group"
+    print_status "Subscription: $subscription_id"
+    
+    # Set the global hostname variable
+    HOSTNAME="$sql_mi_fqdn"
+    
+    return 0
 }
 
 # Function to create comprehensive wordlists using shellpass.sh
@@ -1693,15 +1756,70 @@ configure_target() {
     echo
     
     # Host configuration
-    echo -n "Enter SQL MI hostname/FQDN"
-    if [[ -n "$HOST" ]]; then
-        echo -n " (current: $HOST)"
-    fi
-    echo -n ": "
-    read -r new_host
-    if [[ -n "$new_host" ]]; then
-        HOST="$new_host"
-    fi
+    echo "Select hostname configuration method:"
+    echo "  1. Manual entry"
+    echo "  2. Auto-discover from Azure (default RG: rg-d4sql-sims)"
+    echo "  3. Auto-discover from custom Azure Resource Group"
+    echo
+    echo -n "Choose option (1-3): "
+    read -r host_option
+    
+    case "$host_option" in
+        1)
+            echo -n "Enter SQL MI hostname/FQDN"
+            if [[ -n "$HOST" ]]; then
+                echo -n " (current: $HOST)"
+            fi
+            echo -n ": "
+            read -r new_host
+            if [[ -n "$new_host" ]]; then
+                HOST="$new_host"
+            fi
+            ;;
+        2)
+            print_status "Auto-discovering SQL MI from default resource group..."
+            if auto_discover_sql_mi "rg-d4sql-sims"; then
+                HOST="$HOSTNAME"
+            else
+                print_error "Auto-discovery failed. Please try manual entry."
+                print_status "Press Enter to continue..."
+                read -r
+                return 1
+            fi
+            ;;
+        3)
+            echo -n "Enter Azure Resource Group name: "
+            read -r resource_group
+            if [[ -n "$resource_group" ]]; then
+                print_status "Auto-discovering SQL MI from resource group: $resource_group"
+                if auto_discover_sql_mi "$resource_group"; then
+                    HOST="$HOSTNAME"
+                else
+                    print_error "Auto-discovery failed. Please try manual entry."
+                    print_status "Press Enter to continue..."
+                    read -r
+                    return 1
+                fi
+            else
+                print_error "Resource group name is required."
+                print_status "Press Enter to continue..."
+                read -r
+                return 1
+            fi
+            ;;
+        *)
+            print_error "Invalid option. Using manual entry."
+            echo -n "Enter SQL MI hostname/FQDN"
+            if [[ -n "$HOST" ]]; then
+                echo -n " (current: $HOST)"
+            fi
+            echo -n ": "
+            read -r new_host
+            if [[ -n "$new_host" ]]; then
+                HOST="$new_host"
+            fi
+            ;;
+    esac
     
     # Port configuration
     echo -n "Enter port (current: $PORT): "
@@ -2320,6 +2438,8 @@ run_command_line_test() {
 BATCH_MODE="false"
 MENU_MODE="false"
 TEST_NAME=""
+AUTO_DISCOVER="false"
+RESOURCE_GROUP="rg-d4sql-sims"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -2355,6 +2475,14 @@ while [[ $# -gt 0 ]]; do
             MENU_MODE="true"
             shift
             ;;
+        --auto-discover)
+            AUTO_DISCOVER="true"
+            shift
+            ;;
+        --resource-group)
+            RESOURCE_GROUP="$2"
+            shift 2
+            ;;
         --help)
             show_usage
             exit 0
@@ -2373,6 +2501,18 @@ main() {
     check_dependencies
     setup_directories
     create_comprehensive_wordlists
+    
+    # Auto-discover SQL MI if requested
+    if [[ "$AUTO_DISCOVER" == "true" ]]; then
+        print_status "Auto-discovery requested..."
+        if auto_discover_sql_mi "$RESOURCE_GROUP"; then
+            print_success "Auto-discovery successful. Host set to: $HOSTNAME"
+            HOST="$HOSTNAME"
+        else
+            print_error "Auto-discovery failed. Please specify host manually with --host"
+            exit 1
+        fi
+    fi
     
     # Create session identifier if host is provided
     if [[ -n "$HOST" && -z "$CURRENT_SESSION" ]]; then

@@ -265,14 +265,15 @@ After deployment, you can validate Defender for Database protection using the in
 
 ### Quick Start
 ```bash
-# Get your SQL MI FQDN
 cd SecurityTests
-./get-sql-mi-fqdn.sh
 
-# Interactive testing (recommended)
-./test-defender-sql-alerts.sh
+# Auto-discover and run interactive testing (recommended)
+./test-defender-sql-alerts.sh --auto-discover --menu
 
-# Quick command line test
+# Or manually specify host
+./test-defender-sql-alerts.sh --host your-sql-mi.database.windows.net
+
+# Quick command line test with auto-discovery
 ./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --test password-brute
 
 # Comprehensive testing (all tests)

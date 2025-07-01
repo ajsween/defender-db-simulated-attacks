@@ -286,7 +286,7 @@ else
             fi
         else
             echo "⚠️  Warning: Could not retrieve SQL MI FQDN from deployment outputs"
-            echo "📋 Manual step: Use SecurityTests/get-sql-mi-fqdn.sh to get FQDN and create data"
+            echo "📋 Manual step: Use auto-discovery: cd SecurityTests && ./test-defender-sql-alerts.sh --auto-discover --menu"
         fi
         
         # Show monitoring information for successful deployments
