@@ -123,7 +123,7 @@ After deployment completes:
 
 - **Server**: Use the FQDN from the deployment output
 - **Username**: `d4sqlsim`
-- **Password**: `D4SqlSim2025!@#ComplexP@ssw0rd`
+- **Password**: `YourPassword`
 - **Port**: `1433`
 
 ## Important Notes

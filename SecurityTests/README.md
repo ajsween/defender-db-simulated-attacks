@@ -1,6 +1,7 @@
 # Security Testing Scripts
 
-This folder contains scripts designed to test the security posture of the deployed SQL Managed Instance and validate that Defender for Database is properly configured and functioning.
+This folder contains scripts designed to test the security posture of the deployed SQL Managed Instance and validate that Defender for Database is properly configure# 3. Create sensitive data for CSPM testing  
+./create-sensitive-data.sh --host [YOUR-SQL-MI-FQDN] --password 'YourPassword'and functioning.
 
 ## Quick Start
 
@@ -139,7 +140,7 @@ cd SecurityTests
 **Usage**:
 ```bash
 # Create sensitive data with default username
-./create-sensitive-data.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --password 'D4SqlSim2025!@#ComplexP@ssw0rd'
+./create-sensitive-data.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --password 'YourPassword'
 
 # With custom username
 ./create-sensitive-data.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --username myuser --password 'MyPassword'
@@ -171,7 +172,7 @@ For the most thorough security validation:
 # Then select option 1 to configure target, then run sensitive data creation
 
 # Or specify host manually
-./create-sensitive-data.sh --host [YOUR-SQL-MI-FQDN] --password 'D4SqlSim2025!@#ComplexP@ssw0rd'
+./create-sensitive-data.sh --host [YOUR-SQL-MI-FQDN] --password 'YourPassword'
 ```
 
 ### 3. Validate Detection
@@ -186,13 +187,13 @@ For comprehensive security validation of both attack detection and data protecti
 ### Phase 1: Infrastructure & Attack Detection
 ```bash
 # Auto-discover and test attack detection capabilities
-./test-defender-sql-alerts.sh --auto-discover --username d4sqlsim --password 'D4SqlSim2025!@#ComplexP@ssw0rd' --batch
+./test-defender-sql-alerts.sh --auto-discover --username d4sqlsim --password 'YourPassword' --batch
 ```
 
 ### Phase 2: Data Protection & Classification
 ```bash
 # 3. Create sensitive data for CSPM testing  
-./create-sensitive-data.sh --host [YOUR-SQL-MI-FQDN] --password 'D4SqlSim2025!@#ComplexP@ssw0rd'
+./create-sensitive-data.sh --host [YOUR-SQL-MI-FQDN] --password 'YourPassword'
 ```
 
 ### Phase 3: Validation & Monitoring
