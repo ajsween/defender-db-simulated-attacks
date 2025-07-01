@@ -1,0 +1,150 @@
+# Azure deployment files
+*.deploymentstack.json
+*.deployment.json
+
+# Azure CLI output files
+deployment-outputs.json
+az-output.json
+
+# Bicep build outputs
+*.json
+# Include main.parameters.json for template completeness (contains sample values)
+# For public repositories, remove this line to exclude the parameters file
+#!main.parameters.json
+#!bicepconfig.json
+
+# ARM template outputs (if converting from Bicep)
+template.json
+template.parameters.json
+
+# Azure credentials and secrets
+.azure/
+azure.json
+auth.json
+service-principal.json
+
+# Environment variables and configuration
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+*.env
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log.*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# node_modules (if using any Node.js tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDEs and editors
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.tmp
+*.temp
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Local configuration overrides
+local.parameters.json
+dev.parameters.json
+test.parameters.json
+
+# Terraform files (if mixed infrastructure)
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+
+# Pulumi files (if mixed infrastructure)
+Pulumi.*.yaml
+.pulumi/
+
+# Azure Resource Manager Templates (generated)
+azuredeploy.json
+azuredeploy.parameters.json
+
+# Azure DevOps
+.azure-pipelines/
+
+# GitHub Actions (keep workflow files but exclude sensitive data)
+!.github/workflows/
+.github/secrets/
+
+# Local test scripts
+test-local.sh
+debug.sh
+cleanup-local.sh
+
+# Documentation drafts
+*.draft.md
+notes.txt
+todo.txt
+
+# ZIP files and archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Key files and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
