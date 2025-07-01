@@ -269,21 +269,35 @@ After deployment, you can validate Defender for Database protection using the in
 cd SecurityTests
 ./get-sql-mi-fqdn.sh
 
-# Run basic brute force test
-./test-brute-force.sh --host [YOUR-SQL-MI-FQDN]
+# Interactive testing (recommended)
+./test-defender-sql-alerts.sh
+
+# Quick command line test
+./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --test password-brute
+
+# Comprehensive testing (all tests)
+./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --username d4sqlsim --password [YOUR-PASSWORD] --batch
 ```
 
 ### Test Options
-- **Basic Test**: Small wordlist, standard settings
-- **Comprehensive Test**: Medium/large wordlists with custom parameters
-- **Stealth Test**: Slower rate with delays to simulate realistic attacks
+- **Interactive Mode**: Menu-driven testing with guided configuration
+- **Password Brute Force**: Tests password attacks on known usernames (3 wordlist sizes)
+- **Username Enumeration**: Tests discovery of valid usernames (3 wordlist sizes)  
+- **Comprehensive Brute Force**: Combined password and username attacks
+- **SQL Injection Testing**: Vulnerability detection and attack simulation
+- **Advanced Security Tests**: Harmful applications, suspicious queries, enumeration, shell commands
+- **Batch Mode**: Run all tests automatically with comprehensive reporting
+- **Stealth Mode**: Configurable delays and threading for realistic attack patterns
 
 ### Expected Alerts
 The tests should trigger Defender for Database alerts in Azure Security Center:
-- Brute force login attempts
+- Brute force login attempts (both password and username attacks)
 - Suspicious authentication patterns
+- SQL injection attempts and vulnerabilities
+- Harmful application detection
 - Service enumeration activities
 - Multiple failed login attempts
+- Anomalous database access patterns
 
 See `SecurityTests/README.md` for detailed testing instructions and methodology.
 

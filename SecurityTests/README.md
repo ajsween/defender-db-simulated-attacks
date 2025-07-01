@@ -4,19 +4,75 @@ This folder contains scripts designed to test the security posture of the deploy
 
 ## Quick Start
 
-**If you used the main `deploy.sh` script**, sensitive test data has already been created automatically! You can skip to security testing:
+**If you used the main `deploy.sh` script**, sensitive test data has already been created automatically! You can jump straight to security testing:
 
 ```bash
 cd SecurityTests
-./test-brute-force.sh --host [YOUR-SQL-MI-FQDN]
-./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --password 'D4fend3rSqlS1m2025!@#P@ssw0rd$'
+
+# Interactive mode (recommended) - menu-driven testing
+./test-defender-sql-alerts.sh
+
+# Quick command line test
+./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --test password-brute
+
+# Comprehensive batch testing (all tests)
+./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --username d4sqlsim --password 'YourPassword' --batch
 ```
 
 **If you deployed manually**, follow the complete workflow below.
 
 ## Scripts Overview
 
-### 1. `test-defender-sql-alerts.sh` ⭐ **NEW**
+### 1. `test-defender-sql-alerts.sh` ⭐ **COMPREHENSIVE TESTING SUITE**
+**Purpose**: Unified, menu-based security testing suite that combines all brute force, SQL injection, and Defender alert testing in one comprehensive tool.
+
+**Key Features**:
+- **Interactive Menu Mode**: User-friendly menu system for guided testing
+- **Command Line Mode**: Direct test execution for automation and scripting
+- **Batch Mode**: Run all tests in sequence with comprehensive reporting
+- **Integrated Brute Force Testing**: Password attacks, username enumeration, and comprehensive brute force
+- **Advanced Security Testing**: SQL injection, harmful application detection, suspicious queries
+- **Comprehensive Reporting**: HTML and JSON reports with detailed analysis
+- **Real-time Monitoring**: Progress tracking and status updates
+
+**Testing Categories**:
+- **Password Brute Force**: Tests password attacks on known usernames (3 wordlist sizes)
+- **Username Enumeration**: Tests discovery of valid usernames (3 wordlist sizes)  
+- **Comprehensive Brute Force**: Combined password and username attacks
+- **SQL Injection Testing**: Vulnerability detection and attack simulation
+- **Harmful Application Detection**: Malicious tool connection simulation
+- **Suspicious Query Patterns**: Anomalous SQL activity testing
+- **Database Enumeration**: Information gathering and reconnaissance
+- **Shell Command Execution**: Command execution attempt testing
+
+**Usage Modes**:
+```bash
+# Interactive mode (recommended for first-time users)
+./test-defender-sql-alerts.sh
+
+# Interactive mode with pre-configured target
+./test-defender-sql-alerts.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --menu
+
+# Command line - specific test
+./test-defender-sql-alerts.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --test password-brute
+
+# Command line - comprehensive testing
+./test-defender-sql-alerts.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --username d4sqlsim --password 'YourPassword' --batch
+
+# Verbose output for debugging
+./test-defender-sql-alerts.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --test sql-injection --verbose
+```
+
+**Expected Alerts**:
+- **SQL.MI_BruteForce**: Multiple failed login attempts detected
+- **SQL.MI_PrincipalAnomaly**: Unusual user access patterns
+- **SQL.MI_VulnerabilityToSqlInjection**: Potential SQL injection vulnerability
+- **SQL.MI_PotentialSqlInjection**: Active SQL injection attempts
+- **SQL.MI_HarmfulApplication**: Connection from potentially harmful application
+- **SQL.MI_SuspiciousIpAnomaly**: Access from suspicious IP address
+- **Various Anomaly Alerts**: Enumeration, reconnaissance, and suspicious activity detection
+
+### 2. `create-sensitive-data.sh` ⭐ **AUTOMATED**
 **Purpose**: Comprehensive testing script that covers ALL applicable Defender for SQL alerts for Azure SQL Managed Instance.
 
 **Features**:
@@ -55,29 +111,7 @@ cd SecurityTests
 # Available test categories: brute-force, sql-injection, harmful-application, suspicious-queries, enumeration, shell-commands, all
 ```
 
-### 2. `test-brute-force.sh`
-**Purpose**: Simulates brute force attacks against the SQL Managed Instance to test Defender for Database detection capabilities.
-
-**Features**:
-- Uses Nmap NSE scripts (`ms-sql-brute`) for realistic attack simulation
-- Multiple password wordlists (small, medium, large)
-- Configurable attack parameters (threads, delays, usernames)
-- Comprehensive logging and reporting
-- Service enumeration capabilities
-
-**Usage**:
-```bash
-# Basic test
-./test-brute-force.sh --host sqlmi-d4sqlsim-abc123.database.windows.net
-
-# Test with specific username and medium wordlist
-./test-brute-force.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --username d4sqlsim --wordlist medium
-
-# Slower, stealthier test
-./test-brute-force.sh --host sqlmi-d4sqlsim-abc123.database.windows.net --threads 5 --delay 3 --wordlist large
-```
-
-### 3. `create-sensitive-data.sh` ⭐ **NEW**
+### 3. `get-sql-mi-fqdn.sh`
 **Purpose**: Creates realistic fake sensitive data in SQL Managed Instance to test Defender CSPM's data discovery and classification capabilities.
 
 **Features**:
