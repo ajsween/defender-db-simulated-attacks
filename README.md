@@ -16,7 +16,7 @@ This repository contains Bicep templates to deploy an Azure SQL Managed Instance
 
 - **Authentication**: SQL Server authentication with username `d4sqlsim`
 - **Network Access**: Restricted to your current public IP address (dynamically retrieved during deployment)
-- **Firewall**: Configured to allow only your IP on port 1433
+- **Firewall**: Configured to allow only your IP on port 3342 (public endpoint)
 - **TLS**: Minimum TLS version 1.2
 - **Public Endpoint**: Enabled for external connectivity
 
@@ -121,18 +121,18 @@ The deployment script provides a complete end-to-end deployment with interactive
 
 After deployment completes:
 
-- **Server**: Use the FQDN from the deployment output
+- **Server**: Use the public endpoint FQDN: `<mi-name>.public.<dns-zone>.database.windows.net`
 - **Username**: `d4sqlsim`
 - **Password**: `YourPassword`
-- **Port**: `1433`
+- **Port**: `3342` (public endpoint port)
 
 ## Important Notes
 
 ⚠️ **Deployment Time**: SQL Managed Instance deployment typically takes 3-6 hours to complete.
 
-⚠️ **Cost**: Even with cost optimizations (2 vCores, BasePrice licensing, local backup redundancy), SQL Managed Instance costs ~$185-225/month. Monitor your usage and consider alternatives if budget is a concern.
+⚠️ **Cost**: Even with cost optimizations (4 vCores, BasePrice licensing, local backup redundancy), SQL Managed Instance costs ~$350-400/month. Monitor your usage and consider alternatives if budget is a concern.
 
-⚠️ **Dynamic IP**: The deployment script automatically detects and uses your current public IP address. The firewall rules will be configured for the IP address you have when running the deployment.
+⚠️ **Dynamic IP**: The deployment script automatically detects and uses your current public IP address. The firewall rules will be configured for the IP address you have when running the deployment on **port 3342** (public endpoint).
 
 ## Dynamic IP Configuration
 
@@ -181,15 +181,15 @@ This project follows security best practices:
 - TLS 1.2 minimum required
 - Network isolation through dedicated subnet
 
-## Cost Optimization
+## Cost Management & Optimization
 
-This template is configured for the most cost-effective SQL Managed Instance deployment suitable for testing and simulations:
+This template is configured for reliable SQL Managed Instance deployment suitable for testing and security simulations. Here's the cost breakdown and optimization options:
 
 ### Configuration Choices
 
-- **Compute**: 2 vCores (minimum allowed) instead of 4+ vCores
-  - Reduces compute costs by ~50% compared to default configurations
-  - Sufficient for testing, development, and security simulations
+- **Compute**: 4 vCores (standard configuration) for reliable performance
+  - Provides good balance between cost and performance
+  - Sufficient for testing, development, and security simulations with multiple concurrent connections
   
 - **License Type**: `BasePrice` instead of `LicenseIncluded`
   - Allows use of Azure Hybrid Benefit if you have existing SQL Server licenses
@@ -207,11 +207,11 @@ This template is configured for the most cost-effective SQL Managed Instance dep
 
 ### Estimated Monthly Costs
 
-Based on East US 2 pricing (as of 2025):
-- **Compute**: ~$180-220/month (2 vCores, BasePrice licensing)
+Based on East US pricing (as of 2025):
+- **Compute**: ~$350-400/month (4 vCores, BasePrice licensing)
 - **Storage**: ~$4/month (32GB)
 - **Backup**: ~$1-2/month (local redundancy)
-- **Total**: ~$185-225/month
+- **Total**: ~$355-405/month
 
 > **Note**: Actual costs may vary based on region, usage patterns, and current Azure pricing. Always check the Azure Pricing Calculator for current estimates.
 
@@ -219,15 +219,37 @@ Based on East US 2 pricing (as of 2025):
 
 If costs are still too high for your use case, consider these alternatives:
 
-1. **Azure SQL Database**: Much cheaper than Managed Instance
-2. **SQL Server on VM**: More control over sizing and costs
-3. **Development/Test Pricing**: Special pricing if you have Dev/Test subscriptions
+1. **Reduce to 2 vCores**: Modify `main.bicep` to use 2 vCores instead of 4
+   - Change `vCores: 4` to `vCores: 2` and `capacity: 4` to `capacity: 2`
+   - Reduces costs to ~$180-220/month but may impact performance with concurrent connections
+
+2. **Azure SQL Database**: Much cheaper than Managed Instance
+   - Single database: ~$15-50/month for testing workloads
+   - Elastic pools: ~$20-100/month for multiple databases
+
+3. **SQL Server on VM**: More control over sizing and costs
+   - B-series VMs: ~$30-100/month for development/testing
+   - Can pause/stop when not in use
+
+4. **Development/Test Pricing**: Special pricing if you have Dev/Test subscriptions
+   - Up to 55% savings on compute costs
+   - Available with Visual Studio subscriptions
 
 ### Monitoring Costs
 
-- Use Azure Cost Management to monitor spending
-- Set up billing alerts to avoid unexpected charges
-- Consider using Azure reservations for long-term deployments (1-3 year commitments)
+- **Azure Cost Management**: Monitor spending and set up cost alerts
+  - Set budget alerts at $300, $350, and $400 monthly thresholds
+  - Review daily costs to catch unexpected spikes early
+
+- **Billing Alerts**: Configure notifications for different spending levels
+  - Warning at 80% of budget (~$280/month)
+  - Critical at 100% of budget (~$350/month)
+
+- **Cost Optimization Tips**:
+  - **Stop during off-hours**: Use automation to pause/start SQL MI if supported
+  - **Right-size storage**: Monitor storage usage and adjust as needed
+  - **Azure Reservations**: 1-3 year commitments can save 20-60%
+  - **Azure Hybrid Benefit**: Use existing SQL Server licenses for additional savings
 
 ## Cleanup
 
@@ -270,13 +292,14 @@ cd SecurityTests
 # Auto-discover and run interactive testing (recommended)
 ./test-defender-sql-alerts.sh --auto-discover --menu
 
-# Or manually specify host
-./test-defender-sql-alerts.sh --host your-sql-mi.database.windows.net
+# Or manually specify host (use public endpoint format and port 3342)
+./test-defender-sql-alerts.sh --host your-sql-mi.public.dns-zone.database.windows.net --port 3342
 
 # Quick command line test with auto-discovery
 ./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --test password-brute
 
-# Comprehensive testing (all tests)
+# Comprehensive testing (all tests) 
+# Note: Use the public endpoint FQDN format: <mi-name>.public.<dns-zone>.database.windows.net
 ./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --username d4sqlsim --password [YOUR-PASSWORD] --batch
 ```
 
