@@ -2,6 +2,18 @@
 
 This folder contains scripts designed to test the security posture of the deployed SQL Managed Instance and validate that Defender for Database is properly configured and functioning.
 
+## Quick Start
+
+**If you used the main `deploy.sh` script**, sensitive test data has already been created automatically! You can skip to security testing:
+
+```bash
+cd SecurityTests
+./test-brute-force.sh --host [YOUR-SQL-MI-FQDN]
+./test-defender-sql-alerts.sh --host [YOUR-SQL-MI-FQDN] --password 'D4fend3rSqlS1m2025!@#P@ssw0rd$'
+```
+
+**If you deployed manually**, follow the complete workflow below.
+
 ## Scripts Overview
 
 ### 1. `test-defender-sql-alerts.sh` ⭐ **NEW**

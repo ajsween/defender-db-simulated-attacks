@@ -173,25 +173,26 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-09-01' = {
         '10.0.0.0/16'
       ]
     }
-    subnets: [
+  }
+}
+
+// Subnet for SQL Managed Instance
+resource sqlManagedInstanceSubnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' = {
+  parent: virtualNetwork
+  name: subnetName
+  properties: {
+    addressPrefix: '10.0.0.0/24'
+    networkSecurityGroup: {
+      id: networkSecurityGroup.id
+    }
+    routeTable: {
+      id: routeTable.id
+    }
+    delegations: [
       {
-        name: subnetName
+        name: 'Microsoft.Sql.managedInstances'
         properties: {
-          addressPrefix: '10.0.0.0/24'
-          networkSecurityGroup: {
-            id: networkSecurityGroup.id
-          }
-          routeTable: {
-            id: routeTable.id
-          }
-          delegations: [
-            {
-              name: 'Microsoft.Sql.managedInstances'
-              properties: {
-                serviceName: 'Microsoft.Sql/managedInstances'
-              }
-            }
-          ]
+          serviceName: 'Microsoft.Sql/managedInstances'
         }
       }
     ]
@@ -214,21 +215,21 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
 }
 
 // SQL Managed Instance
-resource sqlManagedInstance 'Microsoft.Sql/managedInstances@2023-08-01-preview' = {
+resource sqlManagedInstance 'Microsoft.Sql/managedInstances@2023-05-01-preview' = {
   name: sqlManagedInstanceName
   location: location
   sku: {
     name: 'GP_Gen5'
     tier: 'GeneralPurpose'
     family: 'Gen5'
-    capacity: 2
+    capacity: 4
   }
   properties: {
     administratorLogin: sqlAdminUsername
     administratorLoginPassword: sqlAdminPassword
-    subnetId: '${virtualNetwork.id}/subnets/${subnetName}'
+    subnetId: sqlManagedInstanceSubnet.id
     licenseType: 'BasePrice'
-    vCores: 2
+    vCores: 4
     storageSizeInGB: 32
     collation: 'SQL_Latin1_General_CP1_CI_AS'
     dnsZonePartner: null

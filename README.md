@@ -53,9 +53,25 @@ export AZURE_SUBSCRIPTION_ID="your-subscription-id"  # If not using default Azur
 
 ### Option 1: Using the Deployment Script (Recommended)
 
+The deployment script provides a complete end-to-end deployment:
+
 ```bash
 ./deploy.sh
 ```
+
+**What it does:**
+1. ✅ Deploys all Azure infrastructure (SQL MI, VNet, NSG, etc.)
+2. ✅ Automatically detects your public IP for firewall rules
+3. ✅ Validates deployment success
+4. ✅ **Automatically creates sensitive test data** if deployment succeeds
+5. ✅ Provides next steps for security testing
+
+**Expected output on success:**
+- Infrastructure deployed
+- Sensitive test data created in SQL MI
+- Ready for Defender for SQL testing
+
+**Duration:** 3-6 hours (SQL MI provisioning time)
 
 ### Option 2: Manual Deployment
 
