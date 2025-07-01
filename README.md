@@ -53,18 +53,30 @@ export AZURE_SUBSCRIPTION_ID="your-subscription-id"  # If not using default Azur
 
 ### Option 1: Using the Deployment Script (Recommended)
 
-The deployment script provides a complete end-to-end deployment:
+The deployment script provides a complete end-to-end deployment with interactive setup:
 
 ```bash
 ./deploy.sh
 ```
 
+**Interactive Setup (if main.parameters.json doesn't exist):**
+1. 🔐 **Password Creation**
+   - Prompts for SQL admin password with complexity requirements
+   - Validates password meets Azure SQL MI security requirements
+   - Requirements: 12+ chars, upper/lower case, digits, special chars
+   - Excludes: quotes, backslashes, 'admin', 'sql'
+
+2. 🌍 **Region Selection**
+   - Choose from 9 US Azure regions
+   - Options include East US, West US 2, Central US, etc.
+
 **What it does:**
-1. ✅ Deploys all Azure infrastructure (SQL MI, VNet, NSG, etc.)
-2. ✅ Automatically detects your public IP for firewall rules
-3. ✅ Validates deployment success
-4. ✅ **Automatically creates sensitive test data** if deployment succeeds
-5. ✅ Provides next steps for security testing
+1. ✅ Creates `main.parameters.json` interactively if missing
+2. ✅ Deploys all Azure infrastructure (SQL MI, VNet, NSG, etc.)
+3. ✅ Automatically detects your public IP for firewall rules
+4. ✅ Validates deployment success
+5. ✅ **Automatically creates sensitive test data** if deployment succeeds
+6. ✅ Provides next steps for security testing
 
 **Expected output on success:**
 - Infrastructure deployed
@@ -72,6 +84,12 @@ The deployment script provides a complete end-to-end deployment:
 - Ready for Defender for SQL testing
 
 **Duration:** 3-6 hours (SQL MI provisioning time)
+
+**Test Mode:**
+```bash
+# Test parameter creation without deploying
+./deploy.sh --test-params
+```
 
 ### Option 2: Manual Deployment
 
