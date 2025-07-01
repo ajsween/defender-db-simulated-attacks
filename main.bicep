@@ -233,7 +233,7 @@ resource sqlManagedInstance 'Microsoft.Sql/managedInstances@2023-05-01-preview' 
     storageSizeInGB: 32
     collation: 'SQL_Latin1_General_CP1_CI_AS'
     dnsZonePartner: null
-    publicDataEndpointEnabled: false
+    publicDataEndpointEnabled: true
     proxyOverride: 'Proxy'
     timezoneId: 'UTC'
     instancePoolId: null

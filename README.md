@@ -18,7 +18,7 @@ This repository contains Bicep templates to deploy an Azure SQL Managed Instance
 - **Network Access**: Restricted to your current public IP address (dynamically retrieved during deployment)
 - **Firewall**: Configured to allow only your IP on port 1433
 - **TLS**: Minimum TLS version 1.2
-- **Public Endpoint**: Disabled for enhanced security
+- **Public Endpoint**: Enabled for external connectivity
 
 ## Files
 
@@ -176,7 +176,7 @@ This project follows security best practices:
 - **Current setup**: Included for development/testing with sample values
 
 ### Network Security
-- Public endpoint disabled by default
+- Public endpoint enabled for external connectivity
 - NSG rules restrict access to your public IP only
 - TLS 1.2 minimum required
 - Network isolation through dedicated subnet
