@@ -278,8 +278,8 @@ else
                 echo ""
                 echo "🧪 Next steps:"
                 echo "   cd SecurityTests"
-                echo "   ./test-brute-force.sh --host $SQL_MI_FQDN"
-                echo "   ./test-defender-sql-alerts.sh --host $SQL_MI_FQDN --password '$SQL_ADMIN_PASSWORD'"
+                echo "   ./test-defender-sql-alerts.sh --host $SQL_MI_FQDN --username d4sqlsim --password '$SQL_ADMIN_PASSWORD' --batch"
+                echo "   # Or run interactively: ./test-defender-sql-alerts.sh --host $SQL_MI_FQDN --menu"
             else
                 echo "⚠️  Warning: SecurityTests/create-sensitive-data.sh not found"
                 echo "📋 Manual step: Create sensitive data using SecurityTests scripts"

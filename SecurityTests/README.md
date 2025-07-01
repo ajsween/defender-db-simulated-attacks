@@ -311,8 +311,8 @@ These scripts can be integrated into automated security testing pipelines:
   displayName: 'Run SQL MI Security Tests'
   inputs:
     targetType: 'filePath'
-    filePath: 'SecurityTests/test-brute-force.sh'
-    arguments: '--host $(SQL_MI_FQDN) --wordlist small --threads 5'
+    filePath: 'SecurityTests/test-defender-sql-alerts.sh'
+    arguments: '--host $(SQL_MI_FQDN) --username $(SQL_USERNAME) --password $(SQL_PASSWORD) --batch'
 ```
 
 ## Contributing
