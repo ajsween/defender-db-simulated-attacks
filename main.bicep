@@ -41,6 +41,20 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-0
         }
       }
       {
+        name: 'allow_public_endpoint_inbound'
+        properties: {
+          description: 'Allow public endpoint connections on port 3342'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '3342'
+          sourceAddressPrefix: clientPublicIP
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 950
+          direction: 'Inbound'
+        }
+      }
+      {
         name: 'allow_redirect_inbound'
         properties: {
           description: 'Allow inbound redirect traffic to Managed Instance inside the virtual network'
