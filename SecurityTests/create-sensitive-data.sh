@@ -17,7 +17,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Default values
-DEFAULT_PORT="1433"
+DEFAULT_PORT="3342"
 DEFAULT_USERNAME="d4sqlsim"
 
 # Function to print colored output
@@ -46,19 +46,27 @@ This script creates sensitive data tables in SQL Managed Instance to test
 Defender CSPM's sensitive data detection and classification capabilities.
 
 OPTIONS:
-    -h, --host HOSTNAME         SQL MI hostname or FQDN (required)
-    -p, --port PORT            SQL Server port (default: $DEFAULT_PORT)
+    -h, --host HOSTNAME         SQL MI hostname or FQDN (required unless using --auto-discover)
+    -p, --port PORT            SQL Server port (default: $DEFAULT_PORT - public endpoint)
     -u, --username USERNAME    SQL Server username (default: $DEFAULT_USERNAME)
     -w, --password PASSWORD    SQL Server password (required)
     -v, --verbose              Verbose output
+    --auto-discover            Auto-discover SQL MI public endpoint from Azure (default RG: rg-d4sql-sims)
+    --resource-group RG_NAME   Resource group for auto-discovery (default: rg-d4sql-sims)
     --help                     Show this help message
 
 EXAMPLES:
-    # Create sensitive data tables
-    $0 --host sqlmi-d4sqlsim-abc123.database.windows.net --password 'YourPassword'
+    # Auto-discover SQL MI public endpoint and create sensitive data
+    $0 --auto-discover --password 'YourPassword'
 
-    # With custom username
-    $0 --host sqlmi-d4sqlsim-abc123.database.windows.net --username myuser --password 'YourPassword'
+    # Auto-discover from custom resource group
+    $0 --auto-discover --resource-group my-rg --password 'YourPassword'
+
+    # Manual host specification (use public endpoint format)
+    $0 --host sqlmi-name.public.dns-zone.database.windows.net --password 'YourPassword'
+
+    # With custom username and port
+    $0 --host sqlmi-name.public.dns-zone.database.windows.net --port 3342 --username myuser --password 'YourPassword'
 
 WHAT THIS SCRIPT CREATES:
     - SensitiveDataTest database
@@ -377,6 +385,87 @@ EOF
     print_success "Monitoring guide created: $guide_file"
 }
 
+# Function to auto-discover SQL Managed Instance public endpoint FQDN
+auto_discover_sql_mi_public_endpoint() {
+    local resource_group="${1:-rg-d4sql-sims}"
+    
+    print_status "Auto-discovering SQL Managed Instance public endpoint from resource group: $resource_group" >&2
+    
+    # Check if Azure CLI is available
+    if ! command -v az &> /dev/null; then
+        print_error "Azure CLI (az) is not installed. Cannot auto-discover SQL MI." >&2
+        print_status "Install Azure CLI: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli" >&2
+        return 1
+    fi
+    
+    # Check if logged into Azure CLI
+    if ! az account show &> /dev/null; then
+        print_error "Not logged into Azure CLI. Please run: az login" >&2
+        return 1
+    fi
+    
+    # Get subscription ID from Azure CLI or environment variable
+    local subscription_id=""
+    if [[ -z "$AZURE_SUBSCRIPTION_ID" ]]; then
+        subscription_id=$(az account show --query id -o tsv 2>/dev/null)
+        if [[ -z "$subscription_id" ]]; then
+            print_error "Could not determine subscription ID. Please set AZURE_SUBSCRIPTION_ID environment variable or ensure you're logged into Azure CLI." >&2
+            return 1
+        fi
+    else
+        subscription_id="$AZURE_SUBSCRIPTION_ID"
+        az account set --subscription "$subscription_id" 2>/dev/null
+    fi
+    
+    print_status "Using subscription: $subscription_id" >&2
+    
+    # Check if resource group exists
+    if ! az group show --name "$resource_group" &> /dev/null; then
+        print_error "Resource group '$resource_group' not found in subscription." >&2
+        print_status "Available resource groups:" >&2
+        az group list --query "[].name" -o tsv 2>/dev/null | head -10 >&2
+        return 1
+    fi
+    
+    # Get the SQL MI name and private FQDN
+    local sql_mi_name
+    local sql_mi_private_fqdn
+    
+    sql_mi_name=$(az sql mi list --resource-group "$resource_group" --query "[0].name" -o tsv 2>/dev/null)
+    sql_mi_private_fqdn=$(az sql mi list --resource-group "$resource_group" --query "[0].fullyQualifiedDomainName" -o tsv 2>/dev/null)
+    
+    if [[ -z "$sql_mi_private_fqdn" ]]; then
+        print_error "No SQL Managed Instance found in resource group: $resource_group" >&2
+        print_status "Make sure the deployment is complete and the SQL MI exists." >&2
+        return 1
+    fi
+    
+    print_status "Found SQL MI: $sql_mi_name" >&2
+    print_status "Private FQDN: $sql_mi_private_fqdn" >&2
+    
+    # Convert private FQDN to public endpoint FQDN
+    # Format: sqlmi-name.dns-zone.database.windows.net -> sqlmi-name.public.dns-zone.database.windows.net
+    local sql_mi_public_fqdn
+    if [[ "$sql_mi_private_fqdn" =~ ^([^.]+)\.([^.]+)\.database\.windows\.net$ ]]; then
+        local mi_name="${BASH_REMATCH[1]}"
+        local dns_zone="${BASH_REMATCH[2]}"
+        sql_mi_public_fqdn="${mi_name}.public.${dns_zone}.database.windows.net"
+    else
+        print_error "Could not parse SQL MI FQDN format: $sql_mi_private_fqdn" >&2
+        return 1
+    fi
+    
+    print_success "SQL Managed Instance discovered:" >&2
+    print_status "Name: $sql_mi_name" >&2
+    print_status "Private FQDN: $sql_mi_private_fqdn" >&2
+    print_status "Public FQDN: $sql_mi_public_fqdn" >&2
+    print_status "Resource Group: $resource_group" >&2
+    
+    # Return the public FQDN
+    echo "$sql_mi_public_fqdn"
+    return 0
+}
+
 # Main function
 main() {
     local host=""
@@ -384,6 +473,8 @@ main() {
     local username="$DEFAULT_USERNAME"
     local password=""
     local verbose="false"
+    local auto_discover="false"
+    local resource_group="rg-d4sql-sims"
     
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
@@ -408,6 +499,14 @@ main() {
                 verbose="true"
                 shift
                 ;;
+            --auto-discover)
+                auto_discover="true"
+                shift
+                ;;
+            --resource-group)
+                resource_group="$2"
+                shift 2
+                ;;
             --help)
                 show_usage
                 exit 0
@@ -420,9 +519,24 @@ main() {
         esac
     done
     
+    # Handle auto-discovery
+    if [[ "$auto_discover" == "true" ]]; then
+        if [[ -n "$host" ]]; then
+            print_warning "Both --auto-discover and --host specified. Using auto-discovery."
+        fi
+        
+        print_status "Auto-discovering SQL MI public endpoint..."
+        if host=$(auto_discover_sql_mi_public_endpoint "$resource_group"); then
+            print_success "Auto-discovery successful: $host"
+        else
+            print_error "Auto-discovery failed. Please specify --host manually."
+            exit 1
+        fi
+    fi
+    
     # Validate required parameters
     if [[ -z "$host" ]]; then
-        print_error "Host is required. Use --host to specify the SQL MI hostname."
+        print_error "Host is required. Use --host to specify the SQL MI hostname or --auto-discover."
         show_usage
         exit 1
     fi
