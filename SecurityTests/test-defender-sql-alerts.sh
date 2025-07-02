@@ -16,7 +16,7 @@ REPORT_DIR="$SCRIPT_DIR/reports"
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YIGHLIGHT='\033[1;33m'
+YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 BOLD='\033[1m'
@@ -70,8 +70,8 @@ show_banner() {
     clear
     echo -e "${BOLD}${BLUE}"
     echo "╔═══════════════════════════════════════════════════════════════════════════════════╗"
-    echo "║                     Defender for SQL Testing Suite                               ║"
-    echo "║                   Comprehensive Security Testing for SQL MI                      ║"
+    echo "║                     Defender for SQL Testing Suite                                ║"
+    echo "║                   Comprehensive Security Testing for SQL MI                       ║"
     echo "╚═══════════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
     
@@ -502,7 +502,8 @@ EOF
             
             # SQL Server specific patterns
             for i in {1..10}; do
-                local num=$(bash "$shellpass_path" 4 1 2>/dev/null | tail -1 | grep -v "^Ver:" || echo "$((1000 + RANDOM % 9000))")
+                local num
+                num=$(bash "$shellpass_path" 4 1 2>/dev/null | tail -1 | grep -v "^Ver:" || echo "$((1000 + RANDOM % 9000))")
                 echo "SQLServer${num}"
                 echo "sqlserver${num}"
                 echo "database${num}"
@@ -737,7 +738,6 @@ EOF
             
             # SQL Server specific patterns with years and complexity
             for year in 2020 2021 2022 2023 2024 2025; do
-                local complexity=$((2 + RANDOM % 3))
                 echo "SQLServer${year}"
                 echo "sqlserver${year}"
                 echo "Database${year}"
@@ -746,7 +746,8 @@ EOF
                 echo "Azure${year}"
                 echo "Microsoft${year}"
                 # Add complex variations
-                local special_char=$(echo '!@#$%^&*' | fold -w1 | shuf -n1)
+                local special_char
+                special_char=$(echo '!@#$%^&*' | fold -w1 | shuf -n1)
                 echo "SQLServer${year}${special_char}"
                 echo "Database${year}${special_char}"
                 echo "Admin${year}${special_char}"
@@ -1076,7 +1077,8 @@ EOF
 test_brute_force() {
     local host="$1"
     local port="$2"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/brute_force_test_${timestamp}.txt"
     
     print_test "Testing: SQL.MI_BruteForce - Brute force attack detection"
@@ -1108,7 +1110,8 @@ test_sql_injection() {
     local port="$2"
     local username="$3"
     local password="$4"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/sql_injection_test_${timestamp}.txt"
     
     print_test "SQL Injection: Testing vulnerability detection and attack patterns"
@@ -1185,7 +1188,8 @@ test_sql_injection() {
 test_harmful_application() {
     local host="$1"
     local port="$2"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/harmful_application_test_${timestamp}.txt"
     
     print_test "Harmful Application: Testing detection of malicious tools"
@@ -1237,7 +1241,8 @@ test_suspicious_queries() {
     local port="$2"
     local username="$3"
     local password="$4"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/suspicious_queries_test_${timestamp}.txt"
     
     print_test "Suspicious Queries: Testing anomalous SQL activity patterns"
@@ -1306,7 +1311,8 @@ test_enumeration() {
     local port="$2"
     local username="$3"
     local password="$4"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/enumeration_test_${timestamp}.txt"
     
     print_test "Database Enumeration: Testing information gathering activities"
@@ -1369,7 +1375,8 @@ test_shell_commands() {
     local port="$2"
     local username="$3"
     local password="$4"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/shell_commands_test_${timestamp}.txt"
     
     print_test "Shell Commands: Testing command execution detection (limited on SQL MI)"
@@ -1426,7 +1433,8 @@ test_shell_commands() {
 generate_test_report() {
     local host="$1"
     local tests_run="$2"
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local report_file="$RESULTS_DIR/defender_sql_test_report_${timestamp}.md"
     
     cat > "$report_file" << EOF
@@ -1544,7 +1552,8 @@ EOF
 
 # Function to generate comprehensive test report
 generate_comprehensive_report() {
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local report_file="$REPORT_DIR/comprehensive_test_report_${timestamp}.html"
     local json_report="$REPORT_DIR/comprehensive_test_report_${timestamp}.json"
     
@@ -1596,7 +1605,8 @@ EOF
     local completed_tests=0
     
     for category in "${test_categories[@]}"; do
-        local latest_file=$(ls -t "$RESULTS_DIR/${category}_"*".txt" 2>/dev/null | head -1)
+        local latest_file
+        latest_file=$(find "$RESULTS_DIR" -name "${category}_*.txt" -type f -exec ls -t {} + 2>/dev/null | head -1)
         total_tests=$((total_tests + 1))
         
         if [[ -f "$latest_file" ]]; then
@@ -1713,7 +1723,8 @@ EOF
 
         local first=true
         for category in "${test_categories[@]}"; do
-            local latest_file=$(ls -t "$RESULTS_DIR/${category}_"*".txt" 2>/dev/null | head -1)
+            local latest_file
+            latest_file=$(find "$RESULTS_DIR" -name "${category}_*.txt" -type f -exec ls -t {} + 2>/dev/null | head -1)
             
             if [[ "$first" == "false" ]]; then
                 echo "," >> "$json_report"
@@ -1965,7 +1976,8 @@ run_password_brute_force() {
     local wordlist_type="$6"
     local verbose="$7"
     
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local log_file="$LOG_DIR/password_bruteforce_${timestamp}.log"
     local results_file="$RESULTS_DIR/password_bruteforce_results_${timestamp}.txt"
     local wordlist_file="$WORDLIST_DIR/passwords_${wordlist_type}.txt"
@@ -1980,7 +1992,8 @@ run_password_brute_force() {
         return 1
     fi
     
-    local password_count=$(wc -l < "$wordlist_file")
+    local password_count
+    password_count=$(wc -l < "$wordlist_file")
     print_status "Testing $password_count passwords..."
     
     {
@@ -1996,7 +2009,8 @@ run_password_brute_force() {
         echo "=== Attack Details ==="
         
         # Create temporary file with single username
-        local temp_userfile=$(mktemp)
+        local temp_userfile
+        temp_userfile=$(mktemp)
         echo "$username" > "$temp_userfile"
         
         # Build nmap command
@@ -2062,7 +2076,8 @@ run_username_brute_force() {
     local password_wordlist_type="$6"
     local verbose="$7"
     
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local log_file="$LOG_DIR/username_bruteforce_${timestamp}.log"
     local results_file="$RESULTS_DIR/username_bruteforce_results_${timestamp}.txt"
     local username_wordlist_file="$WORDLIST_DIR/usernames_${username_wordlist_type}.txt"
@@ -2084,8 +2099,10 @@ run_username_brute_force() {
         return 1
     fi
     
-    local username_count=$(wc -l < "$username_wordlist_file")
-    local password_count=$(wc -l < "$password_wordlist_file")
+    local username_count
+    local password_count
+    username_count=$(wc -l < "$username_wordlist_file")
+    password_count=$(wc -l < "$password_wordlist_file")
     local total_combinations=$((username_count * password_count))
     
     print_status "Testing $username_count usernames with $password_count passwords ($total_combinations combinations)..."
@@ -2163,7 +2180,8 @@ run_comprehensive_brute_force() {
     local wordlist_type="$6"
     local verbose="$7"
     
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local results_file="$RESULTS_DIR/comprehensive_bruteforce_results_${timestamp}.txt"
     
     print_test "Comprehensive Brute Force: Password + Username enumeration attacks"
@@ -2230,7 +2248,8 @@ handle_menu_selection() {
             read -r test_config
             if [[ "$test_config" == "b" ]]; then return; fi
             
-            local config=($(get_test_config "$test_config"))
+            local config
+            IFS=' ' read -ra config <<< "$(get_test_config "$test_config")"
             local threads="${config[0]}"
             local delay="${config[1]}"
             local wordlist="${config[2]}"
@@ -2247,7 +2266,8 @@ handle_menu_selection() {
             read -r test_config
             if [[ "$test_config" == "b" ]]; then return; fi
             
-            local config=($(get_test_config "$test_config"))
+            local config
+            IFS=' ' read -ra config <<< "$(get_test_config "$test_config")"
             local threads="${config[0]}"
             local delay="${config[1]}"
             local wordlist="${config[2]}"
@@ -2264,7 +2284,8 @@ handle_menu_selection() {
             read -r test_config
             if [[ "$test_config" == "b" ]]; then return; fi
             
-            local config=($(get_test_config "$test_config"))
+            local config
+            IFS=' ' read -ra config <<< "$(get_test_config "$test_config")"
             local threads="${config[0]}"
             local delay="${config[1]}"
             local wordlist="${config[2]}"
@@ -2341,7 +2362,8 @@ handle_menu_selection() {
 
 # Function to run all tests in sequence
 run_all_tests() {
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local all_tests_log="$LOG_DIR/all_tests_${timestamp}.log"
     
     print_status "Starting comprehensive test suite..."
@@ -2463,7 +2485,6 @@ run_command_line_test() {
 
 # Parse command line arguments
 BATCH_MODE="false"
-MENU_MODE="false"
 TEST_NAME=""
 AUTO_DISCOVER="false"
 RESOURCE_GROUP="rg-d4sql-sims"
@@ -2499,7 +2520,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --menu)
-            MENU_MODE="true"
+            # Menu mode is the default behavior when no specific action is requested
             shift
             ;;
         --auto-discover)
