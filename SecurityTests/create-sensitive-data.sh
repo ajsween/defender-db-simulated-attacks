@@ -202,7 +202,8 @@ verify_data_creation() {
 
 # Function to generate monitoring recommendations
 generate_monitoring_guide() {
-    local timestamp=$(date +"%Y%m%d_%H%M%S")
+    local timestamp
+    timestamp=$(date +"%Y%m%d_%H%M%S")
     local guide_file="$SCRIPT_DIR/results/defender_cspm_monitoring_${timestamp}.md"
     
     mkdir -p "$SCRIPT_DIR/results"
