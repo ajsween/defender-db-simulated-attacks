@@ -219,14 +219,29 @@ auto_discover_sql_mi() {
         return 1
     fi
     
+    # Transform FQDN to public endpoint format
+    # Original format: <instance_name>.<dns_zone>.database.windows.net
+    # Public format:   <instance_name>.public.<dns_zone>.database.windows.net
+    local public_fqdn
+    if [[ "$sql_mi_fqdn" =~ ^([^.]+)\.(.+)$ ]]; then
+        local instance_name="${BASH_REMATCH[1]}"
+        local dns_zone="${BASH_REMATCH[2]}"
+        public_fqdn="${instance_name}.public.${dns_zone}"
+    else
+        print_warning "Could not parse FQDN format: $sql_mi_fqdn"
+        print_status "Using original FQDN (may not work for public endpoint connections)"
+        public_fqdn="$sql_mi_fqdn"
+    fi
+    
     print_success "SQL Managed Instance discovered:"
     print_status "Name: $sql_mi_name"
-    print_status "FQDN: $sql_mi_fqdn"
+    print_status "Private FQDN: $sql_mi_fqdn"
+    print_status "Public FQDN: $public_fqdn"
     print_status "Resource Group: $resource_group"
     print_status "Subscription: $subscription_id"
     
-    # Set the global hostname variable
-    HOSTNAME="$sql_mi_fqdn"
+    # Set the global hostname variable to public endpoint
+    HOSTNAME="$public_fqdn"
     
     return 0
 }
