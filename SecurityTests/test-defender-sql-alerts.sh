@@ -233,6 +233,33 @@ auto_discover_sql_mi() {
 
 # Function to create comprehensive wordlists using shellpass.sh
 create_comprehensive_wordlists() {
+    # Check if wordlists already exist
+    local wordlists_exist=true
+    local required_wordlists=(
+        "passwords_small.txt"
+        "passwords_medium.txt"
+        "passwords_large.txt"
+        "usernames_small.txt"
+        "usernames_medium.txt"
+        "usernames_large.txt"
+        "sql_injection_payloads.txt"
+        "harmful_applications.txt"
+        "enumeration_queries.txt"
+    )
+    
+    for wordlist in "${required_wordlists[@]}"; do
+        if [[ ! -f "$WORDLIST_DIR/$wordlist" ]]; then
+            wordlists_exist=false
+            break
+        fi
+    done
+    
+    if [[ "$wordlists_exist" == "true" ]]; then
+        print_success "Wordlists already exist in $WORDLIST_DIR - skipping creation"
+        print_status "To recreate wordlists, delete the wordlists directory: rm -rf $WORDLIST_DIR"
+        return 0
+    fi
+    
     print_status "Creating comprehensive wordlists using password generator..."
     
     # Check if we have the shellpass.sh password generator
