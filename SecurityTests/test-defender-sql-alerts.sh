@@ -23,7 +23,7 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # Default values
-DEFAULT_PORT="1433"
+DEFAULT_PORT="3342"
 DEFAULT_USERNAME="d4sqlsim"
 DEFAULT_THREADS="8"
 DEFAULT_DELAY="2"
@@ -95,7 +95,7 @@ Can be run in interactive menu mode or command line mode.
 
 COMMAND LINE OPTIONS:
     -h, --host HOSTNAME         SQL MI hostname or FQDN
-    -p, --port PORT            SQL Server port (default: $DEFAULT_PORT)
+    -p, --port PORT            SQL Server port (default: $DEFAULT_PORT - public endpoint)
     -u, --username USERNAME    Username (default: $DEFAULT_USERNAME)
     -w, --password PASSWORD    Password for authenticated tests
     -t, --test TEST_NAME       Run specific test
@@ -131,13 +131,13 @@ EXAMPLES:
     $0 --auto-discover --resource-group my-rg --test comprehensive-brute
 
     # Command line - specific test
-    $0 --host sqlmi-d4sqlsim-abc123.database.windows.net --test password-brute
+    $0 --host sqlmi-d4sqlsim-abc123.public.dns-zone.database.windows.net --test password-brute
 
     # Command line - all tests
-    $0 --host sqlmi-d4sqlsim-abc123.database.windows.net --username d4sqlsim --password 'YourPassword' --batch
+    $0 --host sqlmi-d4sqlsim-abc123.public.dns-zone.database.windows.net --username d4sqlsim --password 'YourPassword' --batch
 
     # Interactive mode with pre-configured target
-    $0 --host sqlmi-d4sqlsim-abc123.database.windows.net --menu
+    $0 --host sqlmi-d4sqlsim-abc123.public.dns-zone.database.windows.net --menu
 
 EOF
 }
