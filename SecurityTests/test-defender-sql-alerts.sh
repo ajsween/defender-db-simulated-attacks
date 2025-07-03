@@ -1128,9 +1128,9 @@ test_sql_injection() {
     local timestamp
     timestamp=$(date +"%Y%m%d_%H%M%S")
     local result_file="$RESULTS_DIR/sql_injection_test_${timestamp}.txt"
-    
+
     print_test "SQL Injection: Testing vulnerability detection and attack patterns"
-    
+
     {
         echo "=== SQL Injection Test Report ==="
         echo "Date: $(date)"
@@ -1140,61 +1140,74 @@ test_sql_injection() {
         echo "Session: $CURRENT_SESSION"
         echo "==============================="
         echo ""
-        
+
         print_status "Testing SQL injection patterns via nmap..."
-        
-        # Test with nmap SQL injection NSE scripts
         echo "=== Nmap SQL Injection Tests ==="
-        
-        # Test basic SQL injection detection
         echo "Testing ms-sql-brute with injection payloads..."
         timeout 300 nmap -p "$port" --script ms-sql-brute \
             --script-args passdb="$WORDLIST_DIR/sql_injection_payloads.txt" \
             --script-args userdb=<(echo "admin") \
             "$host" 2>&1 || true
-        
+
         echo ""
         echo "Testing ms-sql-info with suspicious queries..."
         timeout 300 nmap -p "$port" --script ms-sql-info \
             --script-args mssql.timeout=10s \
             "$host" 2>&1 || true
-        
+
         if command -v sqlcmd &> /dev/null && [[ -n "$username" && -n "$password" ]]; then
             echo ""
             echo "=== Authenticated SQL Injection Tests ==="
             print_status "Executing SQL injection payloads with valid credentials..."
-            
-            # Test various SQL injection patterns
+
+            local payload_count=0
             while IFS= read -r payload; do
                 if [[ -n "$payload" && ! "$payload" =~ ^# ]]; then
-                    echo "Testing payload: $payload"
-                    
-                    # Test in different contexts
+                    payload_count=$((payload_count+1))
+                    echo ""
+                    echo "--- Payload #$payload_count: $payload ---"
+
+                    # String context
+                    print_status "Testing string context: WHERE LastName = '$payload'"
                     timeout 10s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
-                        -Q "SELECT * FROM sys.databases WHERE name = '$payload'" 2>&1 || true
-                    
+                        -Q "SELECT * FROM Employees WHERE LastName = '$payload'" 2>&1 || echo "[ERROR] String context failed"
+
+                    # Numeric context
+                    print_status "Testing numeric context: WHERE EmployeeID = $payload"
+                    timeout 10s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
+                        -Q "SELECT * FROM Employees WHERE EmployeeID = $payload" 2>&1 || echo "[ERROR] Numeric context failed"
+
+                    # Login simulation
+                    print_status "Testing login simulation: WHERE Username = '$payload' AND Password = 'test'"
+                    timeout 10s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
+                        -Q "SELECT * FROM Users WHERE Username = '$payload' AND Password = 'test'" 2>&1 || echo "[ERROR] Login context failed"
+
+                    # UNION-based
+                    print_status "Testing UNION-based: WHERE name = '$payload' UNION SELECT 'injected'"
+                    timeout 10s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
+                        -Q "SELECT name FROM sys.databases WHERE name = '$payload' UNION SELECT 'injected'" 2>&1 || echo "[ERROR] UNION context failed"
+
+                    # Error-based
+                    print_status "Testing error-based: WHERE 1=CONVERT(int, (SELECT @@version))"
+                    timeout 10s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
+                        -Q "SELECT * FROM Employees WHERE 1=CONVERT(int, (SELECT @@version))" 2>&1 || echo "[ERROR] Error-based context failed"
+
+                    # Time-based
+                    print_status "Testing time-based: WAITFOR DELAY '00:00:05'"
+                    timeout 15s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
+                        -Q "SELECT 1; WAITFOR DELAY '00:00:05'; SELECT 2" 2>&1 || echo "[ERROR] Time-based context failed"
+
                     sleep 1
                 fi
             done < "$WORDLIST_DIR/sql_injection_payloads.txt"
-            
-            # Test time-based SQL injection
+
             echo ""
-            echo "Testing time-based SQL injection..."
-            timeout 15s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
-                -Q "SELECT 1; WAITFOR DELAY '00:00:05'; SELECT 2" 2>&1 || true
-            
-            # Test UNION-based injection
-            echo ""
-            echo "Testing UNION-based SQL injection..."
-            timeout 10s sqlcmd -S "$host,$port" -U "$username" -P "$password" \
-                -Q "SELECT name FROM sys.databases UNION SELECT 'injected_value'" 2>&1 || true
-                
+            print_status "Completed $payload_count payloads in multiple contexts."
         else
             echo "No credentials provided - using nmap-based SQL injection tests only"
         fi
-        
     } | tee "$result_file"
-    
+
     print_success "SQL injection test completed: $result_file"
     return 0
 }
