@@ -49,6 +49,141 @@ export AZURE_SUBSCRIPTION_ID="your-subscription-id"  # If not using default Azur
 2. Appropriate permissions in the target subscription
 3. Bicep CLI (automatically installed with Azure CLI)
 
+## Development Environment Setup
+
+This project includes a `shell.nix` file for easy setup of the development environment using the Nix package manager. This provides reproducible environments across different platforms.
+
+### Option 1: Using Nix (Recommended for Development)
+
+The `shell.nix` file automatically installs all required dependencies:
+- `jq` - JSON processor for Azure CLI output parsing
+- `nmap` - Network security scanner for security testing
+- `sqlcmd` - Microsoft SQL Server command-line tools
+
+#### Installing Nix
+
+**Linux (including WSL):**
+```bash
+# Install Nix using the official installer (multi-user installation)
+curl -L https://nixos.org/nix/install | sh -s -- --daemon
+
+# Source the profile
+. /etc/profile
+
+# Or single-user installation (if you prefer)
+curl -L https://nixos.org/nix/install | sh
+. ~/.nix-profile/etc/profile.d/nix.sh
+```
+
+**macOS:**
+```bash
+# Install Nix using the official installer
+curl -L https://nixos.org/nix/install | sh
+
+# Source the profile
+. ~/.nix-profile/etc/profile.d/nix.sh
+
+# Or install via Homebrew (alternative)
+# brew install nix
+```
+
+**Windows (WSL):**
+```bash
+# First, ensure you have WSL 2 installed
+# Install Ubuntu or your preferred Linux distribution from Microsoft Store
+
+# Then follow the Linux installation steps above
+curl -L https://nixos.org/nix/install | sh -s -- --daemon
+. /etc/profile
+```
+
+#### Using the Development Environment
+
+Once Nix is installed, navigate to the project directory and enter the development shell:
+
+```bash
+# Enter the development environment with all dependencies
+nix-shell
+
+# You should see a message confirming the loaded tools:
+# Development environment loaded with:
+# - jq: JSON processor
+# - nmap: Network security scanner  
+# - sqlcmd: Microsoft SQL Server
+```
+
+The development shell will automatically have all required tools available. Exit the shell with `exit` when done.
+
+#### Benefits of Using Nix
+
+- **Reproducible Environments**: Identical tool versions across all platforms
+- **No System Pollution**: Dependencies are isolated and don't affect your system
+- **Easy Cleanup**: Simply exit the shell to return to your normal environment
+- **Automatic Updates**: Dependencies are managed declaratively
+- **Cross-Platform**: Works consistently on Linux, macOS, and Windows (WSL)
+
+### Option 2: Manual Installation
+
+If you prefer not to use Nix, install the dependencies manually:
+
+**Linux (Ubuntu/Debian):**
+```bash
+# Update package list
+sudo apt update
+
+# Install dependencies
+sudo apt install -y jq nmap
+
+# Install SQL Server command-line tools
+curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
+sudo apt update
+sudo apt install -y mssql-tools unixodbc-dev
+
+# Add to PATH
+echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**macOS:**
+```bash
+# Install Homebrew if not already installed
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install dependencies
+brew install jq nmap
+
+# Install SQL Server command-line tools
+brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
+brew install mssql-tools
+```
+
+**Windows (PowerShell):**
+```powershell
+# Install Chocolatey if not already installed
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install dependencies
+choco install -y jq nmap
+
+# Install SQL Server command-line tools
+# Download and install from: https://docs.microsoft.com/en-us/sql/tools/sqlcmd-utility
+```
+
+### Verification
+
+After installation (either method), verify the tools are available:
+
+```bash
+# Check tool versions
+jq --version
+nmap --version
+sqlcmd -?
+
+# Test Azure CLI integration
+az --version
+```
+
 ## Deployment
 
 ### Option 1: Using the Deployment Script (Recommended)
