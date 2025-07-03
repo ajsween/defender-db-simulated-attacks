@@ -230,12 +230,14 @@ if [ "$TEST_MODE" = true ]; then
 else
     echo "🏗️  Deploying Bicep template..."
     echo "⚠️  Note: SQL Managed Instance deployment can take 3-6 hours to complete"
-    DEPLOYMENT_RESULT=$(az deployment group create \
-        --resource-group "$RESOURCE_GROUP_NAME" \
-        --template-file "main.bicep" \
-        --parameters "@main.parameters.json" clientPublicIP="$PUBLIC_IP" \
-        --name "$DEPLOYMENT_NAME" \
-        --verbose 2>&1)
+    DEPLOY_CMD="az deployment group create \
+        --resource-group \"$RESOURCE_GROUP_NAME\" \
+        --template-file \"$PWD/main.bicep\" \
+        --parameters \"@main.parameters.json\" clientPublicIP=\"$PUBLIC_IP\" \
+        --name \"$DEPLOYMENT_NAME\" \
+        --verbose 2>&1"
+    echo "$DEPLOY_CMD"
+    DEPLOYMENT_RESULT=$(eval "$DEPLOY_CMD")
     
     DEPLOYMENT_EXIT_CODE=$?
 
