@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Azure SQL MI Deployment Script
 # This script deploys the SQL Managed Instance infrastructure
@@ -236,7 +236,7 @@ else
         --parameters "@main.parameters.json" clientPublicIP="$PUBLIC_IP" \
         --name "$DEPLOYMENT_NAME" \
         --verbose 2>&1)
-
+    
     DEPLOYMENT_EXIT_CODE=$?
 
     if [ $DEPLOYMENT_EXIT_CODE -eq 0 ]; then
