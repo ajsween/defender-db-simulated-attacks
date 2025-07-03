@@ -12,5 +12,6 @@ pkgs.mkShell {
     echo "- jq: JSON processor"
     echo "- nmap: Network security scanner"
     echo "- sqlcmd: Microsoft SQL Server"
+    echo "- azure-cli: Azure Command Line Interface"
   '';
 }
